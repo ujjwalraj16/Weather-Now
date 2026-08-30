@@ -73,8 +73,9 @@ const i18n = {
       heavyCoat: "Heavy Coat", scarf: "Scarf", gloves: "Gloves",
       jacket: "Jacket", layers: "Layers", lightLayer: "Light Layer", jeans: "Jeans",
       tshirt: "T-Shirt", shorts: "Shorts", lightTop: "Light Top",
-      umbrella: "Umbrella", rainShoes: "Rain Shoes", windbreaker: "Windbreaker",
-      sunglasses: "Sunglasses", sunscreen: "Sunscreen", torch: "Torch"
+      umbrella: "Umbrella", rainShoes: "Shoes", windbreaker: "Windbreaker",
+      sunglasses: "Sunglasses", sunscreen: "Sunscreen", torch: "Torch",
+      cap: "Cap", water: "Water Bottle", mosquito: "Bug Repellent", reflective: "Reflective Gear"
     },
     wearTips: {
       freezing: "Bundle up! It's freezing outside.",
@@ -133,8 +134,9 @@ const i18n = {
       heavyCoat: "भारी कोट", scarf: "मफ़लर", gloves: "दस्ताने",
       jacket: "जैकेट", layers: "गर्म कपड़े", lightLayer: "हल्के कपड़े", jeans: "जींस",
       tshirt: "टी-शर्ट", shorts: "शॉर्ट्स", lightTop: "हल्का टॉप",
-      umbrella: "छाता", rainShoes: "बारिश के जूते", windbreaker: "विंडब्रेकर",
-      sunglasses: "धूप का चश्मा", sunscreen: "सनस्क्रीन", torch: "टॉर्च"
+      umbrella: "छाता", rainShoes: "जूते", windbreaker: "विंडब्रेकर",
+      sunglasses: "धूप का चश्मा", sunscreen: "सनस्क्रीन", torch: "टॉर्च",
+      cap: "टोपी", water: "पानी की बोतल", mosquito: "मच्छर भगाने वाला", reflective: "चमकदार कपड़े"
     },
     wearTips: {
       freezing: "अच्छे से कपड़े पहनें! बाहर बहुत ठंड है।",
@@ -292,8 +294,11 @@ function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode, isDay }) {
     items.push({ emoji: "🧣", label: w.windbreaker });
   }
 
-  // UV protection (only during the day)
+  // Day-specific items
   if (isDay !== 0) {
+    if (uvMax >= 5) {
+      items.push({ emoji: "🧢", label: w.cap });
+    }
     if (uvMax >= 6) {
       items.push({ emoji: "🕶️", label: w.sunglasses });
     }
@@ -301,6 +306,15 @@ function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode, isDay }) {
       items.push({ emoji: "🧴", label: w.sunscreen });
       tip += tips.uv;
     }
+    if (tempC >= 28) {
+      items.push({ emoji: "💧", label: w.water });
+    }
+  } else {
+    // Night-specific items
+    if (tempC >= 15 && rainPct < 50) {
+      items.push({ emoji: "🦟", label: w.mosquito });
+    }
+    items.push({ emoji: "🦺", label: w.reflective });
   }
 
   // Fog / Low visibility
