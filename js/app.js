@@ -160,13 +160,34 @@ const weatherIcons = {
 
 const weatherIconsNight = {
   0:"🌙", 1:"🌙", 2:"☁️", 3:"☁️",
-  45:"🌫️", 48:"🌫️", 51:"🌦️", 61:"🌧️",
-  63:"🌧️", 65:"🌧️", 71:"🌨️",
-  95:"⛈️", 96:"⛈️", 99:"⛈️"
+  45:"🌫️", 48:"🌫️",
+  51:"🌧️", 53:"🌧️", 55:"🌧️",   // drizzle at night — no sun
+  61:"🌧️", 63:"🌧️", 65:"🌧️",   // rain at night
+  71:"🌨️", 73:"🌨️", 75:"🌨️",   // snow at night
+  80:"🌧️", 81:"🌧️", 82:"🌧️",   // showers at night
+  95:"⛈️", 96:"⛈️", 99:"⛈️"    // thunderstorm
 };
 
-function getIcon(code, isDay = 1) {
-  if (isDay === 0) return weatherIconsNight[code] || "🌙";
+// sunriseStr / sunsetStr are optional "HH:MM" strings for the date of slotHour
+// slotHour is the integer hour (0-23) of the forecast slot in the city's local time
+function getIcon(code, isDay = 1, slotHour = null, sunriseStr = null, sunsetStr = null) {
+  let night = (isDay === 0);
+
+  // Double-check against sunrise/sunset if provided — API is_day can lag by 1h
+  if (slotHour !== null && sunriseStr && sunsetStr) {
+    const srH = parseInt(sunriseStr.split(":")[0], 10);
+    const srM = parseInt(sunriseStr.split(":")[1], 10);
+    const ssH = parseInt(sunsetStr.split(":")[0], 10);
+    const ssM = parseInt(sunsetStr.split(":")[1], 10);
+    const slotMins  = slotHour * 60;
+    const sriseMins = srH * 60 + srM;
+    const ssetMins  = ssH * 60 + ssM;
+    // Force night if slot is before sunrise or at/after sunset
+    if (slotMins < sriseMins || slotMins >= ssetMins) night = true;
+    else night = false;
+  }
+
+  if (night) return weatherIconsNight[code] || "🌙";
   return weatherIcons[code] || "☀️";
 }
 
@@ -603,12 +624,26 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     // ── Hourly Forecast  (now includes rain probability) ──
     const hourlyEl = document.getElementById("hourly");
     if (hourlyEl) {
-      const nowHour = new Date().getHours();
+      // Find the correct starting index by matching the city's local time
+      // (hrly.time entries look like "2024-08-30T23:00" in the city's timezone)
+      // We compare against the current UTC ms to find the closest past hour.
+      const nowMs = Date.now();
+      let nowHour = 0;
+      for (let i = 0; i < hrly.time.length; i++) {
+        // Parse as local city time (no trailing Z so it's treated as local by the API timezone)
+        const slotMs = new Date(hrly.time[i]).getTime();
+        if (slotMs <= nowMs) nowHour = i;
+        else break;
+      }
+
       hourlyEl.innerHTML = hrly.time.slice(nowHour, nowHour + 24).map((timeStr, idx) => {
         const label   = idx === 0 ? "Now" : timeStr.split("T")[1];
         const dataIdx = nowHour + idx;
         const temp    = Math.round(hrly.temperature_2m[dataIdx]);
-        const icon    = getIcon(hrly.weather_code[dataIdx], hrly.is_day[dataIdx]);
+        const isDay   = hrly.is_day[dataIdx]; // 1 = day, 0 = night from API
+        // Extract the hour from the slot's local time string (e.g. "2024-08-30T20:00" → 20)
+        const slotHour = parseInt(timeStr.split("T")[1].split(":")[0], 10);
+        const icon    = getIcon(hrly.weather_code[dataIdx], isDay, slotHour, srTime, ssTime);
         const rainPct = hrly.precipitation_probability?.[dataIdx] ?? 0;
         const rainClass = rainPct >= 20 ? "" : "dry";
         const rainHtml = `<span class="rain-prob ${rainClass}">💧${rainPct}%</span>`;
