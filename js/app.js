@@ -15,7 +15,7 @@ let currentCity  = localStorage.getItem("lastCity")      || "Patna";
 let currentUnit  = localStorage.getItem("weatherUnit")   || "celsius";
 let currentLang  = localStorage.getItem("weatherLang")   || "en";
 let currentTheme = localStorage.getItem("weatherTheme")  || "light";
-let favorites      = JSON.parse(localStorage.getItem("favCities")     || '["Patna"]');
+let favorites      = JSON.parse(localStorage.getItem("favCities")     || '[]');
 
 // Auto-refresh state
 const REFRESH_SECONDS = 15 * 60; // 15 minutes
