@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WeatherNow — Live Weather Dashboard</title>
+  <meta name="description" content="Real-time weather dashboard with hourly & 7-day forecasts, AQI, UV index, and multilingual support powered by Open-Meteo." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="container" id="app">
+
+  <!-- Nav Header -->
+  <header class="nav" role="banner">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/>
+          <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </div>
+      <h1 id="txtAppName">WeatherNow</h1>
+    </div>
+
+    <div class="search-row">
+      <div class="search" role="search">
+        <span class="search-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </span>
+        <input id="q" type="search" placeholder="Search city..." aria-label="Search city" autocomplete="off" spellcheck="false" />
+        <button class="loc-btn" id="useLocation" title="Use my location" aria-label="Use my location">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+        </button>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+        <span class="icon-sun" id="iconSun">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </span>
+        <span class="icon-moon" id="iconMoon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+      </button>
+
+      <!-- Settings -->
+      <div class="controls" id="settingsWrapper">
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings" aria-expanded="false">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <div class="settings-menu" id="settingsMenu" role="menu" aria-hidden="true">
+          <div class="menu-section-title">Preferences</div>
+          <div class="menu-row">
+            <label for="lang" id="lblLang">Language</label>
+            <select id="lang"><option value="en">English</option><option value="hi">हिन्दी</option></select>
+          </div>
+          <div class="menu-row">
+            <label for="unit" id="lblUnit">Units</label>
+            <select id="unit"><option value="celsius">°C</option><option value="fahrenheit">°F</option></select>
+          </div>
+          <div class="menu-divider"></div>
+          <button class="menu-action-btn" id="exportPdf">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="exportPdfTxt">Export as PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Auto-refresh indicator -->
+  <div class="refresh-bar" id="refreshBar" aria-live="polite">
+    <div class="refresh-progress" id="refreshProgress"></div>
+    <span id="refreshLabel">Next refresh in <strong id="refreshCountdown">15:00</strong></span>
+  </div>
+
+  <!-- Recent Searches -->
+  <div class="chips-row" id="recentChips" aria-label="Recent searches"></div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-ring"></div>
+    <span>Fetching weather…</span>
+  </div>
+
+  <!-- Main Grid -->
+  <main class="grid" id="mainGrid">
+    <section class="left-col">
+      <div id="alerts" role="alert" aria-live="assertive"></div>
+
+      <!-- Current Weather -->
+      <div class="card current-card">
+        <div class="current-top">
+          <div class="weather-emoji" id="currentEmoji">☀️</div>
+          <div class="current-info">
+            <div class="city-name" id="cityName">——</div>
+            <div class="temp" id="currentTemp">--°</div>
+            <div class="muted cond-text" id="currentCond">Loading…</div>
+            <!-- NEW: Feels Like -->
+            <div class="feels-row" id="feelsRow" style="display:none">
+              <span class="feels-like-label" id="feelsLikeLabel">Feels like</span>
+              <span class="feels-like-val" id="feelsLikeVal">--°</span>
+            </div>
+          </div>
+        </div>
+        <div class="current-details">
+          <div class="detail-chip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+            <span id="detailHumidity">--%</span>
+          </div>
+          <div class="detail-chip">
+            <!-- NEW: Wind direction compass arrow -->
+            <span id="windArrow" style="font-size:13px;line-height:1;transition:transform 0.4s ease">↑</span>
+            <span id="detailWind">-- km/h</span>
+          </div>
+          <div class="detail-chip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            <span id="detailTime">--:--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hourly Forecast -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title" id="txtHourly">Hourly (24h)</h2>
+        </div>
+        <div class="hourly-wrapper">
+          <div class="hourly" id="hourly"></div>
+        </div>
+      </div>
+
+      <!-- 7-Day Forecast -->
+      <div class="card">
+        <h2 class="card-title" id="txtDaily">7-Day Forecast</h2>
+        <div class="daily" id="daily"></div>
+      </div>
+    </section>
+
+    <aside class="right-col">
+      <!-- AQI -->
+      <div class="card aqi-card">
+        <h2 class="card-title" id="txtAqi">Air Quality</h2>
+        <div class="aqi-main">
+          <div class="aqi-score" id="aqiVal">--</div>
+          <div class="aqi-right">
+            <div class="aqi-label" id="aqiCategory">--</div>
+            <div class="aqi-bar"><div class="aqi-bar-fill" id="aqiBar"></div></div>
+          </div>
+        </div>
+        <div class="aqi-sub-grid">
+          <div class="aqi-sub-item">
+            <span class="aqi-sub-label" id="lblUv">UV Index</span>
+            <strong class="aqi-sub-val" id="uvIndexVal">--</strong>
+          </div>
+          <div class="aqi-sub-item">
+            <span class="aqi-sub-label" id="lblPollen">Pollen</span>
+            <strong class="aqi-sub-val" id="pollenVal">--</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics — now 6 boxes -->
+      <div class="card">
+        <h2 class="card-title" id="txtMetrics">Conditions</h2>
+        <div class="metric-grid">
+          <div class="metric-box">
+            <span class="metric-emoji">🌅</span>
+            <span class="metric-label" id="txtSunrise">Sunrise</span>
+            <strong class="metric-val" id="sunrise">--:--</strong>
+          </div>
+          <div class="metric-box">
+            <span class="metric-emoji">🌇</span>
+            <span class="metric-label" id="txtSunset">Sunset</span>
+            <strong class="metric-val" id="sunset">--:--</strong>
+          </div>
+          <div class="metric-box">
+            <span class="metric-emoji">💨</span>
+            <span class="metric-label" id="txtWind">Wind</span>
+            <strong class="metric-val" id="wind">--</strong>
+          </div>
+          <div class="metric-box">
+            <span class="metric-emoji">💧</span>
+            <span class="metric-label" id="txtHumidity">Humidity</span>
+            <strong class="metric-val" id="humidity">--</strong>
+          </div>
+          <!-- NEW: Pressure -->
+          <div class="metric-box">
+            <span class="metric-emoji">🌡️</span>
+            <span class="metric-label" id="txtPressure">Pressure</span>
+            <strong class="metric-val" id="pressure">-- hPa</strong>
+          </div>
+          <!-- NEW: Visibility -->
+          <div class="metric-box">
+            <span class="metric-emoji">👁️</span>
+            <span class="metric-label" id="txtVisibility">Visibility</span>
+            <strong class="metric-val" id="visibility">-- km</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW: What to Wear -->
+      <div class="card wear-card">
+        <h2 class="card-title" id="txtWear">What to Wear</h2>
+        <div class="wear-grid" id="wearGrid">
+          <div class="wear-item wear-skeleton"></div>
+          <div class="wear-item wear-skeleton"></div>
+          <div class="wear-item wear-skeleton"></div>
+        </div>
+        <p class="wear-tip" id="wearTip"></p>
+      </div>
+
+      <!-- Actions -->
+      <div class="card actions-card">
+        <button class="fav-btn" id="favBtn">
+          <span id="favIconEmpty">☆</span><span id="favIconFilled" style="display:none">★</span>
+          <span id="favBtnTxt">Add to Favourites</span>
+        </button>
+        <!-- NEW: Share button -->
+        <button class="share-btn" id="shareBtn" title="Share this weather">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span id="shareBtnTxt">Share Weather</span>
+        </button>
+        <!-- Share toast -->
+        <div class="share-toast" id="shareToast">✅ Copied to clipboard!</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span id="txtFooter">Powered by Open-Meteo · auto-refreshes every 15 min</span>
+  </footer>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
