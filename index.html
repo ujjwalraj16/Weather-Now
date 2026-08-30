@@ -13,13 +13,14 @@
 </head>
 <body>
 
-<!-- Mobile header bar (visible only on small screens) -->
 <div class="mobile-topbar">
   <button class="mob-menu-btn" id="mobileMenuBtn" aria-label="Open menu">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
   <span class="mob-brand">WEATHERNOW</span>
-  
+  <button class="mob-loc-btn" id="mobileLocBtn" aria-label="Use my location">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+  </button>
 </div>
 
 <div class="dashboard-container" id="app">
@@ -93,22 +94,52 @@
       <!-- Right controls -->
       <div class="header-right">
         <nav class="header-tabs">
-          <a href="#" class="tab">Daily</a>
-          <a href="#" class="tab active">Weekly</a>
-          <a href="#" class="tab">Monthly</a>
+          <a href="#" class="tab" id="tabDaily">Daily</a>
+          <a href="#" class="tab active" id="tabWeekly">Weekly</a>
+          <a href="#" class="tab" id="tabMonthly">Monthly</a>
         </nav>
         <div class="header-actions">
-          <div class="theme-pill">
-            <span>Dark</span>
-            <div class="theme-pill-icon">🌙</div>
-          </div>
-          <button class="hdr-icon-btn" aria-label="Notifications">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <!-- Unit toggle -->
+          <button class="unit-toggle-btn" id="unitToggle" title="Switch units">°C</button>
+          <!-- Geolocation -->
+          <button class="hdr-icon-btn" id="locBtn" title="Use my location" aria-label="Use my location">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </button>
-
+          <!-- Settings -->
+          <div class="settings-wrap" id="settingsWrap">
+            <button class="hdr-icon-btn" id="settingsBtn" aria-label="Settings" title="Settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div class="settings-dropdown" id="settingsDropdown" aria-hidden="true">
+              <div class="sd-title">Preferences</div>
+              <div class="sd-row">
+                <label for="unitSelect">Units</label>
+                <select id="unitSelect">
+                  <option value="celsius">°C — Celsius</option>
+                  <option value="fahrenheit">°F — Fahrenheit</option>
+                </select>
+              </div>
+              <div class="sd-row">
+                <label for="langSelect">Language</label>
+                <select id="langSelect">
+                  <option value="en">English</option>
+                  <option value="hi">हिन्दी</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <span>Fetching weather…</span>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
 
     <!-- ── CONTENT GRID ── -->
     <div class="content-grid">

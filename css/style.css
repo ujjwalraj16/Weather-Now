@@ -919,3 +919,171 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(108,99,255,0.3) transparent;
 }
+
+/* ══════════════════════════════════════════════
+   UNIT TOGGLE BUTTON
+══════════════════════════════════════════════ */
+.unit-toggle-btn {
+  background: var(--bg-card-alt);
+  border: 1.5px solid rgba(108,99,255,0.5);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 0.28rem 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.5px;
+}
+.unit-toggle-btn:hover, .unit-toggle-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+/* Mobile loc button */
+.mob-loc-btn {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════
+   SETTINGS DROPDOWN
+══════════════════════════════════════════════ */
+.settings-wrap {
+  position: relative;
+}
+
+.settings-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #1a1b2e;
+  border: 1px solid rgba(108,99,255,0.3);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  min-width: 200px;
+  z-index: 100;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  animation: fadeInDown 0.2s ease;
+}
+
+.settings-dropdown.open {
+  display: block;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sd-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.8rem;
+}
+
+.sd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.sd-row:last-child { margin-bottom: 0; }
+
+.sd-row label {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sd-row select {
+  background: var(--bg-card-alt);
+  border: 1px solid rgba(108,99,255,0.3);
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  border-radius: var(--radius-sm);
+  padding: 0.28rem 0.5rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.sd-row select:focus { border-color: var(--accent); }
+
+/* ══════════════════════════════════════════════
+   LOADING OVERLAY
+══════════════════════════════════════════════ */
+.loading-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(22,23,42,0.7);
+  backdrop-filter: blur(3px);
+  border-radius: var(--radius-xl);
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.loading-overlay.active {
+  display: flex;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(108,99,255,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #2d2f50;
+  border: 1px solid rgba(108,99,255,0.4);
+  color: var(--text-primary);
+  border-radius: 30px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════════════════════════════════════════════
+   MAIN WRAPPER — position relative for overlay
+══════════════════════════════════════════════ */
+.main-wrapper { position: relative; }
+
