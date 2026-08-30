@@ -75,7 +75,7 @@ const i18n = {
       tshirt: "T-Shirt", shorts: "Shorts", lightTop: "Light Top",
       umbrella: "Umbrella", rainShoes: "Shoes", windbreaker: "Windbreaker",
       sunglasses: "Sunglasses", sunscreen: "Sunscreen", torch: "Torch",
-      cap: "Cap", water: "Water Bottle", mosquito: "Bug Repellent", reflective: "Reflective Gear"
+      cap: "Cap", water: "Water Bottle", mosquito: "Bug Repellent"
     },
     wearTips: {
       freezing: "Bundle up! It's freezing outside.",
@@ -136,7 +136,7 @@ const i18n = {
       tshirt: "टी-शर्ट", shorts: "शॉर्ट्स", lightTop: "हल्का टॉप",
       umbrella: "छाता", rainShoes: "जूते", windbreaker: "विंडब्रेकर",
       sunglasses: "धूप का चश्मा", sunscreen: "सनस्क्रीन", torch: "टॉर्च",
-      cap: "टोपी", water: "पानी की बोतल", mosquito: "मच्छर भगाने वाला", reflective: "चमकदार कपड़े"
+      cap: "टोपी", water: "पानी की बोतल", mosquito: "मच्छर भगाने वाला"
     },
     wearTips: {
       freezing: "अच्छे से कपड़े पहनें! बाहर बहुत ठंड है।",
@@ -314,7 +314,6 @@ function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode, isDay }) {
     if (tempC >= 15 && rainPct < 50) {
       items.push({ emoji: "🦟", label: w.mosquito });
     }
-    items.push({ emoji: "🦺", label: w.reflective });
   }
 
   // Fog / Low visibility
