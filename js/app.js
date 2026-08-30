@@ -156,6 +156,18 @@ const weatherIcons = {
   95:"⛈️", 96:"⛈️", 99:"⛈️"
 };
 
+const weatherIconsNight = {
+  0:"🌙", 1:"🌙", 2:"☁️", 3:"☁️",
+  45:"🌫️", 48:"🌫️", 51:"🌦️", 61:"🌧️",
+  63:"🌧️", 65:"🌧️", 71:"🌨️",
+  95:"⛈️", 96:"⛈️", 99:"⛈️"
+};
+
+function getIcon(code, isDay = 1) {
+  if (isDay === 0) return weatherIconsNight[code] || "🌙";
+  return weatherIcons[code] || "☀️";
+}
+
 /* ══════════════════════════════════════════
    THEME
 ══════════════════════════════════════════ */
@@ -451,8 +463,8 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       `https://api.open-meteo.com/v1/forecast`,
       `?latitude=${latitude}&longitude=${longitude}`,
       `&current=temperature_2m,apparent_temperature,relative_humidity_2m,`,
-      `weather_code,wind_speed_10m,wind_direction_10m,surface_pressure`,
-      `&hourly=temperature_2m,weather_code,precipitation_probability`,
+      `weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,is_day`,
+      `&hourly=temperature_2m,weather_code,precipitation_probability,is_day`,
       `&daily=weather_code,temperature_2m_max,temperature_2m_min,`,
       `sunrise,sunset,uv_index_max,precipitation_probability_max`,
       `&temperature_unit=${unitParam}&timezone=auto&forecast_days=7`
@@ -503,7 +515,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     setText("cityName",    resolvedName);
     setText("currentTemp", `${tempRounded}°`);
     setText("currentCond", condLabel);
-    setText("currentEmoji", weatherIcons[cur.weather_code] || "☀️");
+    setText("currentEmoji", getIcon(cur.weather_code, cur.is_day));
 
     // NEW: Feels Like
     const feelsEl = document.getElementById("feelsRow");
@@ -581,7 +593,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
         const label   = idx === 0 ? "Now" : timeStr.split("T")[1];
         const dataIdx = nowHour + idx;
         const temp    = Math.round(hrly.temperature_2m[dataIdx]);
-        const icon    = weatherIcons[hrly.weather_code[dataIdx]] || "☀️";
+        const icon    = getIcon(hrly.weather_code[dataIdx], hrly.is_day[dataIdx]);
         const rainPct = hrly.precipitation_probability?.[dataIdx] ?? 0;
         const rainClass = rainPct >= 20 ? "" : "dry";
         const rainHtml = `<span class="rain-prob ${rainClass}">💧${rainPct}%</span>`;
@@ -601,7 +613,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       dailyEl.innerHTML = daily.time.map((dateStr, idx) => {
         const d          = new Date(dateStr + "T12:00:00");
         const dayName    = t.days[d.getDay()];
-        const icon       = weatherIcons[daily.weather_code[idx]] || "☀️";
+        const icon       = getIcon(daily.weather_code[idx], 1);
         const cond       = t.conditions[daily.weather_code[idx]]  || "Clear";
         const hi         = Math.round(daily.temperature_2m_max[idx]);
         const lo         = Math.round(daily.temperature_2m_min[idx]);
