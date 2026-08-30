@@ -250,7 +250,7 @@ function windArrowStyle(deg) {
 /* ══════════════════════════════════════════
    WHAT TO WEAR  (returns array of {emoji, label})
 ══════════════════════════════════════════ */
-function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode }) {
+function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode, isDay }) {
   const items = [];
   let tip = "";
   const w = i18n[currentLang].wear;
@@ -292,13 +292,15 @@ function getWhatToWear({ tempC, rainPct, windKph, uvMax, weatherCode }) {
     items.push({ emoji: "🧣", label: w.windbreaker });
   }
 
-  // UV protection
-  if (uvMax >= 6) {
-    items.push({ emoji: "🕶️", label: w.sunglasses });
-  }
-  if (uvMax >= 8) {
-    items.push({ emoji: "🧴", label: w.sunscreen });
-    tip += tips.uv;
+  // UV protection (only during the day)
+  if (isDay !== 0) {
+    if (uvMax >= 6) {
+      items.push({ emoji: "🕶️", label: w.sunglasses });
+    }
+    if (uvMax >= 8) {
+      items.push({ emoji: "🧴", label: w.sunscreen });
+      tip += tips.uv;
+    }
   }
 
   // Fog / Low visibility
@@ -648,7 +650,8 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
         rainPct:     rainPctNow,
         windKph:     cur.wind_speed_10m,
         uvMax:       uvMax,
-        weatherCode: cur.weather_code
+        weatherCode: cur.weather_code,
+        isDay:       cur.is_day
       });
 
       wearGrid.innerHTML = items.map((item, i) => `
