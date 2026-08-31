@@ -519,6 +519,14 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     const hrly  = weatherRes.hourly;
     const t     = i18n[currentLang];
 
+    // ── City's local time (use API offset, NOT browser timezone) ──────────
+    // utc_offset_seconds: e.g. -18000 for CDT (UTC-5), +19800 for IST (UTC+5:30)
+    const utcOffsetSec = weatherRes.utc_offset_seconds ?? 0;
+    const cityNowMs    = Date.now() + utcOffsetSec * 1000; // shift UTC epoch to city's wall clock
+    const cityDate     = new Date(cityNowMs);
+    const cityHour     = cityDate.getUTCHours();   // city's local hour  (0-23)
+    const cityMinute   = cityDate.getUTCMinutes(); // city's local minute (0-59)
+
     // ── Alerts ─────────────────────────────────────────
     const alertBox = document.getElementById("alerts");
     if (alertBox) {
@@ -554,11 +562,8 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     setText("cityName",    resolvedName);
     setText("currentTemp", `${tempRounded}°`);
     setText("currentCond", condLabel);
-    // Use actual local time + sunrise/sunset for accurate day/night icon
-    const nowLocal = new Date();
-    const nowLocalHour = nowLocal.getHours();
-    const nowLocalMinute = nowLocal.getMinutes();
-    setText("currentEmoji", getIcon(cur.weather_code, cur.is_day, nowLocalHour, srTime, ssTime, nowLocalMinute));
+    // Use city's local time (from API offset) + sunrise/sunset for accurate day/night icon
+    setText("currentEmoji", getIcon(cur.weather_code, cur.is_day, cityHour, srTime, ssTime, cityMinute));
 
     // NEW: Feels Like
     const feelsEl = document.getElementById("feelsRow");
@@ -629,15 +634,15 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     // ── Hourly Forecast  (now includes rain probability) ──
     const hourlyEl = document.getElementById("hourly");
     if (hourlyEl) {
-      // Find the correct starting index by matching the city's local time
-      // (hrly.time entries look like "2024-08-30T23:00" in the city's timezone)
-      // We compare against the current UTC ms to find the closest past hour.
+      // Find the correct starting index using the city's actual UTC timestamp.
+      // hrly.time[i] is city-local (e.g. "2024-08-31T00:00" for Tulsa CDT).
+      // Appending "Z" makes JS parse it as UTC; subtracting the UTC offset converts
+      // it back to the true UTC instant for that slot.
       const nowMs = Date.now();
       let nowHour = 0;
       for (let i = 0; i < hrly.time.length; i++) {
-        // Parse as local city time (no trailing Z so it's treated as local by the API timezone)
-        const slotMs = new Date(hrly.time[i]).getTime();
-        if (slotMs <= nowMs) nowHour = i;
+        const slotUtcMs = new Date(hrly.time[i] + "Z").getTime() - utcOffsetSec * 1000;
+        if (slotUtcMs <= nowMs) nowHour = i;
         else break;
       }
 
@@ -697,8 +702,8 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       let tempCelsius = cur.temperature_2m;
       if (currentUnit === "fahrenheit") tempCelsius = (cur.temperature_2m - 32) * 5/9;
 
-      const nowHour2  = new Date().getHours();
-      const rainPctNow = hrly.precipitation_probability?.[nowHour2] ?? 0;
+      // Use city's local hour (not browser's) to pick the correct rain probability slot
+      const rainPctNow = hrly.precipitation_probability?.[cityHour] ?? 0;
 
       const { items, tip } = getWhatToWear({
         tempC:       tempCelsius,
