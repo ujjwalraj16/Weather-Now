@@ -11,7 +11,7 @@
 /* ══════════════════════════════════════════
    STATE
 ══════════════════════════════════════════ */
-let currentCity  = localStorage.getItem("lastCity")      || "Patna";
+let currentCity  = localStorage.getItem("lastCity")      || "";
 let currentUnit  = localStorage.getItem("weatherUnit")   || "celsius";
 let currentLang  = localStorage.getItem("weatherLang")   || "en";
 let currentTheme = localStorage.getItem("weatherTheme")  || "light";
@@ -170,16 +170,15 @@ const weatherIconsNight = {
 
 // sunriseStr / sunsetStr are optional "HH:MM" strings for the date of slotHour
 // slotHour is the integer hour (0-23) of the forecast slot in the city's local time
-function getIcon(code, isDay = 1, slotHour = null, sunriseStr = null, sunsetStr = null) {
+// slotMinute is the integer minute (0-59) — defaults to 0 if not provided
+function getIcon(code, isDay = 1, slotHour = null, sunriseStr = null, sunsetStr = null, slotMinute = 0) {
   let night = (isDay === 0);
 
-  // Double-check against sunrise/sunset if provided — API is_day can lag by 1h
+  // Always cross-check against sunrise/sunset when provided — API is_day can lag or be wrong
   if (slotHour !== null && sunriseStr && sunsetStr) {
-    const srH = parseInt(sunriseStr.split(":")[0], 10);
-    const srM = parseInt(sunriseStr.split(":")[1], 10);
-    const ssH = parseInt(sunsetStr.split(":")[0], 10);
-    const ssM = parseInt(sunsetStr.split(":")[1], 10);
-    const slotMins  = slotHour * 60;
+    const [srH, srM] = sunriseStr.split(":").map(Number);
+    const [ssH, ssM] = sunsetStr.split(":").map(Number);
+    const slotMins  = slotHour * 60 + slotMinute;  // include minutes for accuracy
     const sriseMins = srH * 60 + srM;
     const ssetMins  = ssH * 60 + ssM;
     // Force night if slot is before sunrise or at/after sunset
@@ -551,7 +550,11 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     setText("cityName",    resolvedName);
     setText("currentTemp", `${tempRounded}°`);
     setText("currentCond", condLabel);
-    setText("currentEmoji", getIcon(cur.weather_code, cur.is_day));
+    // Use actual local time + sunrise/sunset for accurate day/night icon
+    const nowLocal = new Date();
+    const nowLocalHour = nowLocal.getHours();
+    const nowLocalMinute = nowLocal.getMinutes();
+    setText("currentEmoji", getIcon(cur.weather_code, cur.is_day, nowLocalHour, srTime, ssTime, nowLocalMinute));
 
     // NEW: Feels Like
     const feelsEl = document.getElementById("feelsRow");
@@ -641,9 +644,11 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
         const dataIdx = nowHour + idx;
         const temp    = Math.round(hrly.temperature_2m[dataIdx]);
         const isDay   = hrly.is_day[dataIdx]; // 1 = day, 0 = night from API
-        // Extract the hour from the slot's local time string (e.g. "2024-08-30T20:00" → 20)
-        const slotHour = parseInt(timeStr.split("T")[1].split(":")[0], 10);
-        const icon    = getIcon(hrly.weather_code[dataIdx], isDay, slotHour, srTime, ssTime);
+        // Extract hour AND minute from the slot's local time string (e.g. "2024-08-30T19:30" → h=19, m=30)
+        const timeParts = timeStr.split("T")[1].split(":");
+        const slotHour   = parseInt(timeParts[0], 10);
+        const slotMinute = parseInt(timeParts[1] || "0", 10);
+        const icon    = getIcon(hrly.weather_code[dataIdx], isDay, slotHour, srTime, ssTime, slotMinute);
         const rainPct = hrly.precipitation_probability?.[dataIdx] ?? 0;
         const rainClass = rainPct >= 20 ? "" : "dry";
         const rainHtml = `<span class="rain-prob ${rainClass}">💧${rainPct}%</span>`;
@@ -822,5 +827,19 @@ document.getElementById("exportPdf")?.addEventListener("click", () => {
 
   renderChips();
   updateStaticText();
-  loadWeatherData(currentCity);
+
+  // If no saved city, try geolocation first; fall back to a neutral default
+  if (!currentCity) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => loadWeatherData(null, pos.coords.latitude, pos.coords.longitude,
+          currentLang === "hi" ? "मेरा स्थान" : "My Location"),
+        () => loadWeatherData("New Delhi") // permission denied fallback
+      );
+    } else {
+      loadWeatherData("New Delhi"); // geolocation not supported fallback
+    }
+  } else {
+    loadWeatherData(currentCity);
+  }
 })();
