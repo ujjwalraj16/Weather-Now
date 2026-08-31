@@ -30,6 +30,7 @@ const i18n = {
   en: {
     appName: "WeatherNow",
     searchPlaceholder: "Search city…",
+    nowLabel: "Now",
     hourly: "Hourly (24h)",
     daily: "7-Day Forecast",
     aqi: "Air Quality",
@@ -52,6 +53,9 @@ const i18n = {
     langLabel: "Language",
     unitLabel: "Units",
     footer: "Powered by Open-Meteo · auto-refreshes every 15 min",
+    refreshLabel: "Next refresh in",
+    loadingText: "Fetching weather…",
+    locationNotFound: "Location not found",
     aqiCategories: { good: "Good", fair: "Fair", moderate: "Moderate", poor: "Poor", veryPoor: "Very Poor" },
     alerts: {
       thunderstorm: "⚡ Thunderstorm Warning — Seek indoor shelter.",
@@ -91,6 +95,7 @@ const i18n = {
   hi: {
     appName: "मौसम",
     searchPlaceholder: "शहर खोजें…",
+    nowLabel: "अभी",
     hourly: "प्रति घंटा पूर्वानुमान (24h)",
     daily: "7-दिवसीय पूर्वानुमान",
     aqi: "वायु गुणवत्ता",
@@ -113,6 +118,9 @@ const i18n = {
     langLabel: "भाषा",
     unitLabel: "इकाई",
     footer: "Open-Meteo API द्वारा संचालित",
+    refreshLabel: "अगला अपडेट",
+    loadingText: "मौसम लोड हो रहा है…",
+    locationNotFound: "स्थान नहीं मिला",
     aqiCategories: { good:"अच्छा", fair:"संतोषजनक", moderate:"मध्यम", poor:"खराब", veryPoor:"बहुत खराब" },
     alerts: {
       thunderstorm: "⚡ आंधी-तूफान की चेतावनी — सुरक्षित स्थान पर रहें।",
@@ -220,6 +228,8 @@ function updateStaticText() {
   const t = i18n[currentLang];
   setText("txtAppName",    t.appName);
   setAttr("q", "placeholder", t.searchPlaceholder);
+  // Update input lang so OS keyboard/IME matches selected language
+  setAttr("q", "lang", currentLang === "hi" ? "hi" : "en");
   setText("txtHourly",     t.hourly);
   setText("txtDaily",      t.daily);
   setText("txtAqi",        t.aqi);
@@ -240,6 +250,18 @@ function updateStaticText() {
   setText("txtFooter",     t.footer);
   setText("shareBtnTxt",   t.shareWeather);
   setText("shareToast",    t.toastShare);
+  // Update refresh label text
+  const refreshLabelEl = document.getElementById("refreshLabel");
+  if (refreshLabelEl) {
+    const countdown = document.getElementById("refreshCountdown");
+    const countdownText = countdown ? countdown.outerHTML : "<strong id=\"refreshCountdown\">15:00</strong>";
+    refreshLabelEl.innerHTML = `${t.refreshLabel} ${countdownText}`;
+  }
+  // Update loading overlay text
+  const loadingSpan = document.querySelector("#loadingOverlay span");
+  if (loadingSpan) loadingSpan.textContent = t.loadingText;
+  // Update html lang attribute
+  document.documentElement.lang = currentLang;
   updateFavUI();
 }
 
@@ -462,10 +484,24 @@ document.addEventListener("click", e => {
    GEO FETCH
 ══════════════════════════════════════════ */
 async function fetchCoordinates(city) {
+  // Always fetch in English for reliable geocoding; separately fetch localized name when Hindi
   const res  = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
   const data = await res.json();
   if (!data.results?.length) throw new Error("City not found");
-  return data.results[0];
+  const result = data.results[0];
+
+  // If Hindi is selected, fetch the localized (Hindi) city name separately
+  if (currentLang === "hi") {
+    try {
+      const hiRes  = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=hi&format=json`);
+      const hiData = await hiRes.json();
+      if (hiData.results?.length) {
+        result.localizedName = hiData.results[0].name;
+      }
+    } catch (_) { /* fall back to English name */ }
+  }
+
+  return result;
 }
 
 /* ══════════════════════════════════════════
@@ -484,8 +520,10 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       latitude     = geo.latitude;
       longitude    = geo.longitude;
       const cc     = geo.country_code ? geo.country_code.toUpperCase() : "";
-      resolvedName = cc ? `${geo.name}, ${cc}` : geo.name;
-      currentCity  = geo.name;
+      // Use localized name for display when available (Hindi), always store English name for API calls
+      const displayCityName = (currentLang === "hi" && geo.localizedName) ? geo.localizedName : geo.name;
+      resolvedName = cc ? `${displayCityName}, ${cc}` : displayCityName;
+      currentCity  = geo.name; // keep English for subsequent API calls
     }
 
     localStorage.setItem("lastCity", currentCity);
@@ -557,7 +595,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
 
     // ── Current weather ────────────────────────────────
     const tempRounded   = Math.round(cur.temperature_2m);
-    const condLabel     = t.conditions[cur.weather_code] || "Clear";
+    const condLabel     = t.conditions[cur.weather_code] || t.conditions[0];
 
     setText("cityName",    resolvedName);
     setText("currentTemp", `${tempRounded}°`);
@@ -647,7 +685,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       }
 
       hourlyEl.innerHTML = hrly.time.slice(nowHour, nowHour + 24).map((timeStr, idx) => {
-        const label   = idx === 0 ? "Now" : timeStr.split("T")[1];
+        const label   = idx === 0 ? t.nowLabel : timeStr.split("T")[1];
         const dataIdx = nowHour + idx;
         const temp    = Math.round(hrly.temperature_2m[dataIdx]);
         const isDay   = hrly.is_day[dataIdx]; // 1 = day, 0 = night from API
@@ -676,7 +714,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
         const d          = new Date(dateStr + "T12:00:00");
         const dayName    = t.days[d.getDay()];
         const icon       = getIcon(daily.weather_code[idx], 1);
-        const cond       = t.conditions[daily.weather_code[idx]]  || "Clear";
+        const cond       = t.conditions[daily.weather_code[idx]] || t.conditions[0];
         const hi         = Math.round(daily.temperature_2m_max[idx]);
         const lo         = Math.round(daily.temperature_2m_min[idx]);
         const rainPct    = daily.precipitation_probability_max?.[idx] ?? 0;
@@ -735,7 +773,7 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
   } catch (err) {
     console.error("WeatherNow:", err);
     const cond = document.getElementById("currentCond");
-    if (cond) cond.textContent = currentLang === "hi" ? "स्थान नहीं मिला" : "Location not found";
+    if (cond) cond.textContent = i18n[currentLang].locationNotFound;
   } finally {
     setLoading(false);
   }
