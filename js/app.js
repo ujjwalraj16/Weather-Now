@@ -543,6 +543,10 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
       });
     }
 
+    // ── Sunrise / Sunset times (needed for icon logic below) ──────────────
+    const srTime = daily.sunrise?.[0]?.split("T")[1]  ?? "--:--";
+    const ssTime = daily.sunset?.[0]?.split("T")[1]   ?? "--:--";
+
     // ── Current weather ────────────────────────────────
     const tempRounded   = Math.round(cur.temperature_2m);
     const condLabel     = t.conditions[cur.weather_code] || "Clear";
@@ -578,8 +582,6 @@ async function loadWeatherData(cityName = currentCity, lat = null, lon = null, d
     setText("detailWind", `${Math.round(cur.wind_speed_10m)} km/h ${compassLabel}`);
 
     // ── Quick Metrics ──────────────────────────────────
-    const srTime = daily.sunrise?.[0]?.split("T")[1]  ?? "--:--";
-    const ssTime = daily.sunset?.[0]?.split("T")[1]   ?? "--:--";
     setText("sunrise",  srTime);
     setText("sunset",   ssTime);
     setText("wind",     `${Math.round(cur.wind_speed_10m)} km/h ${compassLabel}`);
